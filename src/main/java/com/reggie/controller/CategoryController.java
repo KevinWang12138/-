@@ -65,4 +65,5 @@ public class CategoryController {
         List<Category> list=categoryService.list(lambdaQueryWrapper);
         return R.success(list);
     }
+
 }
