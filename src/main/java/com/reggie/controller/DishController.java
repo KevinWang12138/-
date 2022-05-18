@@ -7,6 +7,7 @@ import com.reggie.common.R;
 import com.reggie.dto.DishDto;
 import com.reggie.entity.Category;
 import com.reggie.entity.Dish;
+import com.reggie.entity.DishFlavor;
 import com.reggie.service.CategoryService;
 import com.reggie.service.DishFlavorService;
 import com.reggie.service.DishService;
@@ -87,13 +88,41 @@ public class DishController {
     /**
      * 查询特定口味的菜品
      */
+//    @GetMapping("/list")
+//    public R<List<Dish>> list(Dish dish){
+//        LambdaQueryWrapper<Dish> queryWrapper=new LambdaQueryWrapper<>();
+//        queryWrapper.eq(dish.getCategoryId()!=null,Dish::getCategoryId,dish.getCategoryId());
+//        queryWrapper.eq(dish.getCategoryId()!=null,Dish::getStatus,1);
+//        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
+//        List<Dish> list = dishService.list(queryWrapper);
+//        return R.success(list);
+//    }
+
+
     @GetMapping("/list")
-    public R<List<Dish>> list(Dish dish){
+    public R<List<DishDto>> list(Dish dish){
         LambdaQueryWrapper<Dish> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(dish.getCategoryId()!=null,Dish::getCategoryId,dish.getCategoryId());
         queryWrapper.eq(dish.getCategoryId()!=null,Dish::getStatus,1);
         queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
         List<Dish> list = dishService.list(queryWrapper);
-        return R.success(list);
+
+        List<DishDto> dishDtoList=list.stream().map((item)->{
+            Long categoryId=item.getCategoryId();//分类id
+            Category category=categoryService.getById(categoryId);//获取对应口味
+            String categoryName=category.getName();//提取口味名字
+            DishDto dishDto=new DishDto();
+            BeanUtils.copyProperties(item,dishDto);//复制
+            if (categoryName!=null){
+                dishDto.setCategoryName(categoryName);//赋值
+            }
+            Long dishId=item.getId();
+            LambdaQueryWrapper<DishFlavor> lambdaQueryWrapper=new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.eq(DishFlavor::getDishId,dishId);
+            List<DishFlavor> dishFlavorList=dishFlavorService.list(lambdaQueryWrapper);
+            dishDto.setFlavors(dishFlavorList);
+            return dishDto;//返回可以显示的对象
+        }).collect(Collectors.toList());//作为集合的形式展示
+        return R.success(dishDtoList);
     }
 }
