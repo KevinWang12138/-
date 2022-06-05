@@ -12,9 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-@RestController
 @Slf4j
+@RestController
 @RequestMapping("/addressBook")
 public class AddressBookController {
     @Autowired
